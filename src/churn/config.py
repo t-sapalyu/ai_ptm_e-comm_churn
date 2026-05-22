@@ -69,3 +69,21 @@ ALL_FEATURES: list[str] = NUMERIC_WITH_NAN + NUMERIC_NO_NAN + CATEGORICAL
 RANDOM_STATE: int = 42
 TRAIN_SIZE: float = 0.70
 VAL_SIZE: float = 0.15  # the remaining 0.15 goes to test
+
+
+# MLflow
+MLFLOW_TRACKING_URI: str = os.environ.get("MLFLOW_TRACKING_URI", MLRUNS_DIR.as_uri())
+MLFLOW_EXPERIMENT_NAME: str = "retailgenius-churn"
+REGISTERED_MODEL_NAME: str = "churn_classifier"
+
+# Models to train. Keys are the names used in MLflow run tags and CLI flags.
+MODELS_TO_TRAIN: list[str] = ["logreg", "random_forest", "xgboost"]
+
+# Test F1 threshold for promoting Staging -> Production
+PROMOTION_F1_THRESHOLD: float = 0.70
+
+
+# Monitoring
+# PSI thresholds per the industry convention 
+PSI_NO_SHIFT: float = 0.10
+PSI_MODERATE_SHIFT: float = 0.25
