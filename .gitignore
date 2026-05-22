@@ -224,3 +224,25 @@ data/processed/*
 !data/interim/.gitkeep
 !data/processed/.gitkeep
 aim_env/
+
+# MLflow and reports
+mlruns/
+mlartifacts/
+reports/*.html
+
+# Notebooks
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Linters / type checkers
+.mypy_cache/
+.ruff_cache/
+
+# Sphinx
+docs/_build/

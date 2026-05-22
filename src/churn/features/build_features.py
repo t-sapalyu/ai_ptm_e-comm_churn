@@ -1,13 +1,3 @@
-"""Feature engineering — a single sklearn ColumnTransformer.
-
-The transformer is fit on the training set only, then reused for validation,
-test, and inference. Three column groups are handled differently:
-
-* numeric columns with missing values  : median imputation + standard scaling
-* numeric columns without missing values: standard scaling only
-* categorical columns                   : one-hot encoding (unknown -> all zeros)
-"""
-
 from __future__ import annotations
 
 from sklearn.compose import ColumnTransformer
@@ -19,13 +9,7 @@ from churn import config
 
 
 def build_preprocessor() -> ColumnTransformer:
-    """Return the ColumnTransformer used as the first stage of every model pipeline.
-
-    Returns
-    -------
-    sklearn.compose.ColumnTransformer
-        An unfit transformer ready to be wrapped in a sklearn ``Pipeline``.
-    """
+    """Return the ColumnTransformer used as the first stage of every model pipeline."""
     numeric_with_nan_pipeline = Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="median")),
