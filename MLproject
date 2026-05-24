@@ -1,0 +1,24 @@
+name: retailgenius-churn
+
+python_env: python_env.yaml
+
+entry_points:
+  prepare_data:
+    command: "python -m churn.data.make_dataset"
+
+  train:
+    parameters:
+      model:
+        type: string
+        default: "all"
+    command: "python -m churn.models.train --model {model}"
+
+  evaluate:
+    parameters:
+      threshold:
+        type: float
+        default: 0.70
+    command: "python -m churn.models.evaluate --threshold {threshold}"
+
+  main:
+    command: "python -m churn.data.make_dataset && python -m churn.models.train && python -m churn.models.evaluate"
