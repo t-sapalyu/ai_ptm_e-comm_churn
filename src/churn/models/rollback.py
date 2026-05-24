@@ -75,9 +75,7 @@ def promote(version: str) -> None:
                 version=v.version,
                 stage="Archived",
             )
-            logger.info(
-                "Archived previous Production version %s", v.version
-            )
+            logger.info("Archived previous Production version %s", v.version)
 
     client.transition_model_version_stage(
         name=config.REGISTERED_MODEL_NAME,
@@ -94,9 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     group.add_argument(
         "--list", action="store_true", help="List all versions."
     )
-    group.add_argument(
-        "--version", help="Promote this version to Production."
-    )
+    group.add_argument("--version", help="Promote this version to Production.")
     args = parser.parse_args(argv)
 
     logging.basicConfig(
