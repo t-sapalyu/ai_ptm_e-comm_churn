@@ -22,13 +22,13 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-import matplotlib.pyplot as plt
-import mlflow
-import mlflow.sklearn
-import pandas as pd
-import seaborn as sns
-from mlflow.tracking import MlflowClient
-from sklearn.metrics import ( 
+import matplotlib.pyplot as plt  # noqa: E402
+import mlflow  # noqa: E402
+import mlflow.sklearn  # noqa: E402
+import pandas as pd  # noqa: E402
+import seaborn as sns  # noqa: E402
+from mlflow.tracking import MlflowClient  # noqa: E402
+from sklearn.metrics import (  # noqa: E402
     ConfusionMatrixDisplay,
     accuracy_score,
     classification_report,
@@ -39,7 +39,7 @@ from sklearn.metrics import (
     roc_curve,
 )
 
-from churn import config
+from churn import config  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

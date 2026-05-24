@@ -84,6 +84,6 @@ PROMOTION_F1_THRESHOLD: float = 0.70
 
 
 # Monitoring
-# PSI thresholds per the industry convention 
+# PSI thresholds per the industry convention
 PSI_NO_SHIFT: float = 0.10
 PSI_MODERATE_SHIFT: float = 0.25

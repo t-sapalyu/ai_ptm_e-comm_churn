@@ -1,6 +1,6 @@
 """Batch inference using the Production model.
-    Run with::
-    python -m churn.models.predict --input customers.csv --output preds.csv
+Run with::
+python -m churn.models.predict --input customers.csv --output preds.csv
 
 """
 

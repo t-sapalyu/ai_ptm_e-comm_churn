@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 # Model factory: param name str is One of ``"logreg"``, ``"random_forest"``, ``"xgboost"``
 def get_model(name: str) -> tuple[Any, dict[str, Any]]:
-    
+
     if name == "logreg":
         params = {
             "C": 1.0,
