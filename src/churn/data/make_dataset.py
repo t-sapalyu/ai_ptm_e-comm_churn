@@ -103,7 +103,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+    )
 
     df = load_raw(args.raw_file)
     df = clean(df)
@@ -111,7 +113,11 @@ def main(argv: list[str] | None = None) -> int:
     save_splits(train_df, val_df, test_df)
 
     # Sanity check: positive-class ratio should be roughly preserved
-    for name, frame in [("train", train_df), ("val", val_df), ("test", test_df)]:
+    for name, frame in [
+        ("train", train_df),
+        ("val", val_df),
+        ("test", test_df),
+    ]:
         ratio = frame[config.TARGET].mean()
         logger.info("Churn ratio in %s: %.3f", name, ratio)
 

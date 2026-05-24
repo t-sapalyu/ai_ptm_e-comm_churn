@@ -1,13 +1,14 @@
-"""Evaluate the Staging model on the held-out test set and promote to Production.
+"""Evaluate the Staging model on the test set and promote to Production.
 
 Run with::
 
     python -m churn.models.evaluate
 
 The script loads the model currently in the ``Staging`` stage of the
-``churn_classifier`` registry, scores the test set, writes a classification
-report and ROC curve PNG to ``reports/``, and — if the test F1 meets the
-configured threshold — transitions the model to ``Production``.
+``churn_classifier`` registry, scores the test set, writes a
+classification report and ROC curve PNG to ``reports/``, and — if the
+test F1 meets the configured threshold — transitions the model to
+``Production``.
 """
 
 from __future__ import annotations
@@ -48,16 +49,19 @@ def load_test_set() -> tuple[pd.DataFrame, pd.Series]:
     """Load the held-out test split."""
     if not config.TEST_FILE.exists():
         raise FileNotFoundError(
-            f"{config.TEST_FILE} not found. Run `python -m churn.data.make_dataset` first."
+            f"{config.TEST_FILE} not found. "
+            "Run `python -m churn.data.make_dataset` first."
         )
     test_df = pd.read_parquet(config.TEST_FILE)
     return test_df[config.ALL_FEATURES], test_df[config.TARGET]
 
 
 def load_staging_model() -> tuple[object, str]:
-    """Load the Staging model and return both the model and its version string."""
+    """Load the Staging model and return its version string."""
     client = MlflowClient()
-    versions = client.get_latest_versions(config.REGISTERED_MODEL_NAME, stages=["Staging"])
+    versions = client.get_latest_versions(
+        config.REGISTERED_MODEL_NAME, stages=["Staging"]
+    )
     if not versions:
         raise RuntimeError(
             f"No '{config.REGISTERED_MODEL_NAME}' model in Staging. "
@@ -70,16 +74,20 @@ def load_staging_model() -> tuple[object, str]:
     return model, version
 
 
-def save_artifacts(y_true: pd.Series, y_pred, y_proba, output_dir: Path) -> dict[str, str]:
+def save_artifacts(
+    y_true: pd.Series, y_pred, y_proba, output_dir: Path
+) -> dict[str, str]:
     """Write the classification report, confusion matrix, and ROC curve.
 
-    Returns a dict of artifact name -> file path (as strings) for MLflow logging.
+    Returns a dict of artifact name -> file path for MLflow logging.
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     artifacts: dict[str, str] = {}
 
     # 1. Classification report as JSON
-    report = classification_report(y_true, y_pred, output_dict=True, zero_division=0)
+    report = classification_report(
+        y_true, y_pred, output_dict=True, zero_division=0
+    )
     report_path = output_dir / "classification_report.json"
     with report_path.open("w") as fh:
         json.dump(report, fh, indent=2)
@@ -87,7 +95,9 @@ def save_artifacts(y_true: pd.Series, y_pred, y_proba, output_dir: Path) -> dict
 
     # 2. Confusion matrix
     fig, ax = plt.subplots(figsize=(5, 4))
-    ConfusionMatrixDisplay.from_predictions(y_true, y_pred, ax=ax, cmap="Blues")
+    ConfusionMatrixDisplay.from_predictions(
+        y_true, y_pred, ax=ax, cmap="Blues"
+    )
     ax.set_title("Confusion matrix — test set")
     fig.tight_layout()
     cm_path = output_dir / "confusion_matrix.png"
@@ -114,14 +124,17 @@ def save_artifacts(y_true: pd.Series, y_pred, y_proba, output_dir: Path) -> dict
     return artifacts
 
 
-def maybe_promote_to_production(version: str, f1: float, threshold: float) -> bool:
+def maybe_promote_to_production(
+    version: str, f1: float, threshold: float
+) -> bool:
     """Transition the Staging version to Production if F1 ≥ threshold.
 
     Returns True if a transition was performed.
     """
     if f1 < threshold:
         logger.info(
-            "Test F1=%.3f is below promotion threshold %.3f — staying in Staging.",
+            "Test F1=%.3f is below promotion threshold %.3f — "
+            "staying in Staging.",
             f1,
             threshold,
         )
@@ -129,7 +142,9 @@ def maybe_promote_to_production(version: str, f1: float, threshold: float) -> bo
 
     client = MlflowClient()
     # Archive any existing Production version first
-    for v in client.search_model_versions(f"name='{config.REGISTERED_MODEL_NAME}'"):
+    for v in client.search_model_versions(
+        f"name='{config.REGISTERED_MODEL_NAME}'"
+    ):
         if v.current_stage == "Production" and v.version != version:
             client.transition_model_version_stage(
                 name=config.REGISTERED_MODEL_NAME,
@@ -162,7 +177,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+    )
 
     mlflow.set_tracking_uri(config.MLFLOW_TRACKING_URI)
     mlflow.set_experiment(config.MLFLOW_EXPERIMENT_NAME)
@@ -181,7 +199,10 @@ def main(argv: list[str] | None = None) -> int:
         "test_roc_auc": roc_auc_score(y_test, y_proba),
     }
 
-    logger.info("Test metrics: %s", {k: round(v, 4) for k, v in metrics.items()})
+    logger.info(
+        "Test metrics: %s",
+        {k: round(v, 4) for k, v in metrics.items()},
+    )
 
     artifacts = save_artifacts(y_test, y_pred, y_proba, config.REPORTS_DIR)
 

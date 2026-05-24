@@ -33,7 +33,7 @@ from churn.features.build_features import build_preprocessor
 logger = logging.getLogger(__name__)
 
 
-# Model factory: param name str is One of ``"logreg"``, ``"random_forest"``, ``"xgboost"``
+# Model factory: choices include "logreg", "random_forest", "xgboost"
 def get_model(name: str) -> tuple[Any, dict[str, Any]]:
 
     if name == "logreg":
@@ -77,7 +77,7 @@ def get_model(name: str) -> tuple[Any, dict[str, Any]]:
 
 # Reproducibility helpers
 def get_git_commit() -> str:
-    """Return the current git commit hash, or 'unknown' if not in a git repo."""
+    """Return current git commit hash, or 'unknown' if not in a git repo."""
     try:
         out = subprocess.check_output(
             ["git", "rev-parse", "HEAD"],
@@ -101,7 +101,8 @@ def load_fingerprints() -> dict[str, str]:
 def load_splits() -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
     if not config.TRAIN_FILE.exists():
         raise FileNotFoundError(
-            f"{config.TRAIN_FILE} not found. " "Run `python -m churn.data.make_dataset` first."
+            f"{config.TRAIN_FILE} not found. "
+            "Run `python -m churn.data.make_dataset` first."
         )
     train_df = pd.read_parquet(config.TRAIN_FILE)
     val_df = pd.read_parquet(config.VAL_FILE)
@@ -141,8 +142,8 @@ def train_one(
     Returns
     -------
     tuple
-        ``(model_version, val_f1)`` — the registered model version (as a
-        string) and the validation F1 used to select the best run.
+        ``(model_version, val_f1)`` — registered model version string
+        and the validation F1 metric score.
     """
     estimator, params = get_model(model_name)
 
@@ -190,22 +191,28 @@ def train_one(
 
         # Find the version that was just registered for this run
         client = MlflowClient()
-        versions = client.search_model_versions(f"name='{config.REGISTERED_MODEL_NAME}'")
-        version_for_run = next(v.version for v in versions if v.run_id == run.info.run_id)
+        versions = client.search_model_versions(
+            f"name='{config.REGISTERED_MODEL_NAME}'"
+        )
+        version_for_run = next(
+            v.version for v in versions if v.run_id == run.info.run_id
+        )
 
         return version_for_run, metrics["f1"]
 
 
 def promote_best_to_staging(results: dict[str, tuple[str, float]]) -> None:
-    """Transition the registered version with the best val F1 to ``Staging``.
+    """Transition registered version with best val F1 to ``Staging``.
 
-    Any previous ``Staging`` version is archived so we always have exactly one.
+    Any previous ``Staging`` version is archived so we always have one.
     """
     best_model = max(results, key=lambda name: results[name][1])
     best_version, best_f1 = results[best_model]
 
     client = MlflowClient()
-    for v in client.search_model_versions(f"name='{config.REGISTERED_MODEL_NAME}'"):
+    for v in client.search_model_versions(
+        f"name='{config.REGISTERED_MODEL_NAME}'"
+    ):
         if v.current_stage == "Staging" and v.version != best_version:
             client.transition_model_version_stage(
                 name=config.REGISTERED_MODEL_NAME,
@@ -237,7 +244,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+    )
 
     mlflow.set_tracking_uri(config.MLFLOW_TRACKING_URI)
     mlflow.set_experiment(config.MLFLOW_EXPERIMENT_NAME)
@@ -246,15 +256,23 @@ def main(argv: list[str] | None = None) -> int:
     fingerprints = load_fingerprints()
     git_commit = get_git_commit()
 
-    models_to_run = config.MODELS_TO_TRAIN if args.model == "all" else [args.model]
+    models_to_run = (
+        config.MODELS_TO_TRAIN if args.model == "all" else [args.model]
+    )
 
     results: dict[str, tuple[str, float]] = {}
     with mlflow.start_run(run_name="train_all"):
         # Reproducibility tags / params on the parent run
         mlflow.set_tag("git.commit", git_commit)
-        mlflow.set_tag("dataset.train_sha256", fingerprints.get("train", "unknown"))
-        mlflow.set_tag("dataset.val_sha256", fingerprints.get("val", "unknown"))
-        mlflow.set_tag("dataset.test_sha256", fingerprints.get("test", "unknown"))
+        mlflow.set_tag(
+            "dataset.train_sha256", fingerprints.get("train", "unknown")
+        )
+        mlflow.set_tag(
+            "dataset.val_sha256", fingerprints.get("val", "unknown")
+        )
+        mlflow.set_tag(
+            "dataset.test_sha256", fingerprints.get("test", "unknown")
+        )
         mlflow.log_param("sklearn_version", sklearn.__version__)
         mlflow.log_param("xgboost_version", xgboost.__version__)
         mlflow.log_param("random_state", config.RANDOM_STATE)

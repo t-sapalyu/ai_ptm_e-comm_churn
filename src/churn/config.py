@@ -72,7 +72,9 @@ VAL_SIZE: float = 0.15  # the remaining 0.15 goes to test
 
 
 # MLflow
-MLFLOW_TRACKING_URI: str = os.environ.get("MLFLOW_TRACKING_URI", MLRUNS_DIR.as_uri())
+MLFLOW_TRACKING_URI: str = os.environ.get(
+    "MLFLOW_TRACKING_URI", MLRUNS_DIR.as_uri()
+)
 MLFLOW_EXPERIMENT_NAME: str = "retailgenius-churn"
 REGISTERED_MODEL_NAME: str = "churn_classifier"
 

@@ -1,10 +1,11 @@
+# flake8: noqa: E501
 """CLI: generate an HTML drift report.
 
 Usage::
 
-    python -m churn.monitoring.report \\
-        --reference data/processed/reference.parquet \\
-        --current   data/incoming/last_week.parquet \\
+    python -m churn.monitoring.report \
+        --reference data/processed/reference.parquet \
+        --current   data/incoming/last_week.parquet \
         --output    reports/drift_2026-01-22.html
 
 The HTML page contains a single table: one row per feature with PSI and
@@ -35,7 +36,9 @@ _SEVERITY_COLOUR = {
 }
 
 
-def render_html(drift_df: pd.DataFrame, reference_path: Path, current_path: Path) -> str:
+def render_html(
+    drift_df: pd.DataFrame, reference_path: Path, current_path: Path
+) -> str:
     """Render the drift summary as an HTML page."""
     rows = []
     for _, row in drift_df.iterrows():
@@ -48,7 +51,9 @@ def render_html(drift_df: pd.DataFrame, reference_path: Path, current_path: Path
             f"</tr>"
         )
     table_rows = (
-        "\n".join(rows) if rows else ('<tr><td colspan="3">No features compared.</td></tr>')
+        "\n".join(rows)
+        if rows
+        else ('<tr><td colspan="3">No features compared.</td></tr>')
     )
 
     return f"""<!DOCTYPE html>
@@ -124,7 +129,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+    )
 
     if not args.reference.exists():
         raise FileNotFoundError(f"Reference file not found: {args.reference}")
