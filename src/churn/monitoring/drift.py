@@ -36,7 +36,8 @@ def compute_psi(
     current : pandas.Series
         Current values, typically the latest production sample.
     bins : int
-        Number of quantile bins for numeric columns. Ignored for categoricals.
+        Number of quantile bins for numeric columns. Ignored for
+        categoricals.
     epsilon : float
         Small constant added to bin proportions to avoid ``log(0)``.
 
@@ -50,7 +51,9 @@ def compute_psi(
     if ref.empty or cur.empty:
         return float("nan")
 
-    is_numeric = pd.api.types.is_numeric_dtype(ref) and pd.api.types.is_numeric_dtype(cur)
+    is_numeric = pd.api.types.is_numeric_dtype(
+        ref
+    ) and pd.api.types.is_numeric_dtype(cur)
 
     if is_numeric:
         # Quantile edges from the reference distribution
@@ -83,7 +86,7 @@ def compute_psi(
 
 
 def classify_psi(psi: float) -> str:
-    """Map a PSI value to one of ``"none"``, ``"moderate"``, ``"significant"``."""
+    """Map a PSI value to one of ``"none"``, ``"moderate"``."""
     if np.isnan(psi):
         return "unknown"
     if psi < config.PSI_NO_SHIFT:
@@ -108,7 +111,8 @@ def feature_drift_report(
     current_df : pandas.DataFrame
         Latest production sample.
     features : list of str, optional
-        Subset of columns to evaluate. Defaults to :data:`config.ALL_FEATURES`.
+        Subset of columns to evaluate. Defaults to
+        :data:`config.ALL_FEATURES`.
     bins : int
         Number of bins for numeric features.
 

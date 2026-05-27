@@ -1,13 +1,16 @@
 """Demo client for the local MLflow serving endpoint.
+
 Start the server in one terminal::
 
-    mlflow models serve -m "models:/churn_classifier/Production" -p 5001 --no-conda
+    mlflow models serve -m "models:/churn_classifier/Production"
+    -p 5001 --no-conda
 
 Then run this script::
 
     python -m churn.inference.request
 
-It POSTs a single sample customer record to the model and prints the response.
+It POSTs a single sample customer record to the model and prints the
+response.
 """
 
 from __future__ import annotations
@@ -64,7 +67,7 @@ SAMPLE_CUSTOMER2: dict[str, object] = {
 
 
 def call_endpoint(endpoint: str = DEFAULT_ENDPOINT) -> dict:
-    """POST the sample customer to the serving endpoint and return the JSON response."""
+    """POST sample customer to serving endpoint and return JSON response."""
     payload = {"dataframe_records": [SAMPLE_CUSTOMER]}
     response = requests.post(
         endpoint,
@@ -88,7 +91,8 @@ def main() -> int:
         )
         print("Start it with:", file=sys.stderr)
         print(
-            '  mlflow models serve -m "models:/churn_classifier/Production"' " -p 5001 --no-conda",
+            '  mlflow models serve -m "models:/churn_classifier/Production"'
+            " -p 5001 --no-conda",  # noqa: E501
             file=sys.stderr,
         )
         return 1
