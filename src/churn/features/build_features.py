@@ -9,7 +9,7 @@ from churn import config
 
 
 def build_preprocessor() -> ColumnTransformer:
-    """Return the ColumnTransformer used as the first stage of every model pipeline."""
+    """Return ColumnTransformer used as first stage of model pipelines."""
     numeric_with_nan_pipeline = Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="median")),
@@ -19,8 +19,9 @@ def build_preprocessor() -> ColumnTransformer:
 
     numeric_no_nan_pipeline = Pipeline(steps=[("scaler", StandardScaler())])
 
-    # sparse_output=False keeps the dense output compatible with all downstream
-    # estimators (XGBoost works fine with sparse, but logreg + RF are happier dense)
+    # sparse_output=False keeps the dense output compatible with all
+    # downstream estimators (XGBoost works fine with sparse, but logreg
+    # + RF are happier dense)
     categorical_pipeline = Pipeline(
         steps=[
             (
@@ -32,8 +33,16 @@ def build_preprocessor() -> ColumnTransformer:
 
     preprocessor = ColumnTransformer(
         transformers=[
-            ("num_with_nan", numeric_with_nan_pipeline, config.NUMERIC_WITH_NAN),
-            ("num_no_nan", numeric_no_nan_pipeline, config.NUMERIC_NO_NAN),
+            (
+                "num_with_nan",
+                numeric_with_nan_pipeline,
+                config.NUMERIC_WITH_NAN,
+            ),
+            (
+                "num_no_nan",
+                numeric_no_nan_pipeline,
+                config.NUMERIC_NO_NAN,
+            ),
             ("cat", categorical_pipeline, config.CATEGORICAL),
         ],
         remainder="drop",

@@ -1,0 +1,53 @@
+name: AI Project Technical Methodologies CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+      - master
+
+# Silences the deprecation warning by forcing the actions to execute on Node 24
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Codebase
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install uv and Project Dependencies
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+        uv venv aim_env
+        source aim_env/bin/activate
+        uv pip install -r requirements.txt
+        uv pip install black flake8 flake8-pyproject isort
+        pip install --no-deps -e .
+
+    - name: Run Isort Import Check
+      run: |
+        source aim_env/bin/activate
+        isort --check-only src/churn/
+
+    - name: Run Black Formatting Check
+      run: |
+        source aim_env/bin/activate
+        black --check src/churn/
+
+    - name: Run Flake8 Lint Check
+      run: |
+        source aim_env/bin/activate
+        flake8 src/churn/

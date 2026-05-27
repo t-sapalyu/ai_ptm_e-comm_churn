@@ -35,11 +35,14 @@ _SEVERITY_COLOUR = {
 }
 
 
-def render_html(drift_df: pd.DataFrame, reference_path: Path, current_path: Path) -> str:
+def render_html(
+    drift_df: pd.DataFrame, reference_path: Path, current_path: Path
+) -> str:
     """Render the drift summary as an HTML page."""
     rows = []
     for _, row in drift_df.iterrows():
         colour = _SEVERITY_COLOUR.get(row["severity"], "#ffffff")
+        # flake8: noqa: E501
         rows.append(
             f'<tr style="background-color: {colour};">'
             f'<td>{row["feature"]}</td>'
@@ -48,7 +51,9 @@ def render_html(drift_df: pd.DataFrame, reference_path: Path, current_path: Path
             f"</tr>"
         )
     table_rows = (
-        "\n".join(rows) if rows else ('<tr><td colspan="3">No features compared.</td></tr>')
+        "\n".join(rows)
+        if rows
+        else ('<tr><td colspan="3">No features compared.</td></tr>')
     )
 
     return f"""<!DOCTYPE html>
@@ -64,8 +69,9 @@ def render_html(drift_df: pd.DataFrame, reference_path: Path, current_path: Path
         th, td {{ padding: 0.5rem 0.75rem; border: 1px solid #ddd; text-align: left; }}
         th {{ background: #f5f5f5; }}
         .legend {{ margin-top: 1.5rem; font-size: 0.9rem; }}
-        .legend span {{ display: inline-block; padding: 0.25rem 0.6rem; margin-right: 0.5rem;
-                        border: 1px solid #ccc; border-radius: 4px; }}
+        .legend span {{ display: inline-block; padding: 0.25rem 0.6rem;
+                        margin-right: 0.5rem; border: 1px solid #ccc;
+                        border-radius: 4px; }}
     </style>
 </head>
 <body>
@@ -90,7 +96,8 @@ def render_html(drift_df: pd.DataFrame, reference_path: Path, current_path: Path
             PSI &lt; {config.PSI_NO_SHIFT} — none
         </span>
         <span style="background: {_SEVERITY_COLOUR['moderate']};">
-            {config.PSI_NO_SHIFT} ≤ PSI &lt; {config.PSI_MODERATE_SHIFT} — moderate
+            {config.PSI_NO_SHIFT} ≤ PSI &lt; {config.PSI_MODERATE_SHIFT}
+            — moderate
         </span>
         <span style="background: {_SEVERITY_COLOUR['significant']};">
             PSI ≥ {config.PSI_MODERATE_SHIFT} — significant
@@ -108,13 +115,13 @@ def main(argv: list[str] | None = None) -> int:
         "--reference",
         type=Path,
         default=config.REFERENCE_FILE,
-        help="Parquet file containing the reference distribution.",
+        help="Parquet file containing reference distribution.",
     )
     parser.add_argument(
         "--current",
         type=Path,
         required=True,
-        help="Parquet file containing the current sample.",
+        help="Parquet file containing current sample.",
     )
     parser.add_argument(
         "--output",
@@ -124,12 +131,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+    )
 
     if not args.reference.exists():
-        raise FileNotFoundError(f"Reference file not found: {args.reference}")
+        raise FileNotFoundError(f"Reference file missing: {args.reference}")
     if not args.current.exists():
-        raise FileNotFoundError(f"Current file not found: {args.current}")
+        raise FileNotFoundError(f"Current file missing: {args.current}")
 
     reference_df = pd.read_parquet(args.reference)
     current_df = pd.read_parquet(args.current)
