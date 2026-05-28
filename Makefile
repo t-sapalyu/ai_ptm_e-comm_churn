@@ -44,11 +44,11 @@ install-dev:
 	pre-commit install
 
 format:
-	black src tests
-	isort src tests
+	black src/churn/ tests/
+	isort src/churn/ tests/
 
 lint:
-	flake8 src tests
+	flake8 src/churn/ tests/
 
 test:
 	pytest
@@ -79,7 +79,7 @@ rollback-list:
 	$(PYTHON) -m churn.models.rollback --list
 
 docs:
-	sphinx-build -b html docs docs/_build/html
+	sphinx-build -b html docs/source docs/build/html
 
 docker-build:
 	docker build -t retailgenius-churn:latest .
@@ -90,4 +90,4 @@ docker-run:
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +
-	rm -rf .coverage htmlcov docs/_build
+	rm -rf .coverage htmlcov docs/build

@@ -26,13 +26,15 @@ RUN pip install --no-deps .
 # --- Runtime stage -------------------------------------------------------
 FROM python:3.11-slim AS runtime
 
+# PYTHONPATH inclusion fixes the ModuleNotFoundError by linking /app/src
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONPATH="/app/src" \
     MLFLOW_TRACKING_URI=file:///app/mlruns
 
 WORKDIR /app
 
-# Copy Python deps + project from builder
+# Copy Python deps + project metadata paths from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 

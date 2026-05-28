@@ -2,16 +2,16 @@
 #
 # Usage from a PowerShell prompt at the repo root:
 #
-#   .\tasks.ps1 help
-#   .\tasks.ps1 prepare
-#   .\tasks.ps1 train
-#   .\tasks.ps1 evaluate
-#   .\tasks.ps1 serve
+#    .\tasks.ps1 help
+#    .\tasks.ps1 prepare
+#    .\tasks.ps1 train
+#    .\tasks.ps1 evaluate
+#    .\tasks.ps1 serve
 #
 # If PowerShell blocks the script with an execution-policy error, run this
 # ONCE (as your normal user, not as admin):
 #
-#   Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+#    Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 #
 # That allows local scripts you wrote yourself while still blocking
 # unsigned ones from the internet.
@@ -65,8 +65,8 @@ switch ($Task.ToLower()) {
     "install"         { pip install -r requirements.txt; pip install -e . }
     "install-dev"     { pip install -r requirements-dev.txt; pip install -e .; pre-commit install }
 
-    "format"          { black src tests; isort src tests }
-    "lint"            { flake8 src tests }
+    "format"          { black src/churn/ tests/; isort src/churn/ tests/ }
+    "lint"            { flake8 src/churn/ tests/ }
     "test"            { pytest }
 
     "prepare"         { python -m churn.data.make_dataset }
@@ -85,17 +85,17 @@ switch ($Task.ToLower()) {
 
     "rollback-list"   { python -m churn.models.rollback --list }
 
-    "docs"            { sphinx-build -b html docs docs\_build\html }
+    "docs"            { sphinx-build -b html docs/source docs/build/html }
     "docker-build"    { docker build -t retailgenius-churn:latest . }
     "docker-run"      { docker run -p 8080:8080 retailgenius-churn:latest }
 
     "clean" {
         Get-ChildItem -Path . -Recurse -Force -Directory `
-            | Where-Object { $_.Name -in @("__pycache__", ".pytest_cache") } `
+            | Where-Object { $_.Name -in @("__pycache__", ".pytest_cache", "build") } `
             | Remove-Item -Recurse -Force
         if (Test-Path .coverage)        { Remove-Item .coverage }
         if (Test-Path htmlcov)          { Remove-Item htmlcov -Recurse -Force }
-        if (Test-Path docs\_build)      { Remove-Item docs\_build -Recurse -Force }
+        if (Test-Path docs/build)       { Remove-Item docs/build -Recurse -Force }
         Write-Host "Cleaned."
     }
 
