@@ -44,6 +44,10 @@ COPY mlruns/ /app/mlruns/
 COPY src/ /app/src/
 COPY setup.py /app/
 
+# -> WINDOWS PATH REWRITE HACK <-
+# Use native Linux tools to find and replace the local Windows paths
+RUN find /app/mlruns -type f -name "*.yaml" -exec sed -i 's|file:///.*/mlruns|file:///app/mlruns|g' {} +
+
 EXPOSE 8080
 
 # Serve the Production model. --no-conda is important because the runtime
