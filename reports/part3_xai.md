@@ -22,14 +22,16 @@ preprocessor (median imputation + scaling + one-hot encoding) followed by
 the classifier. `shap.TreeExplainer` only accepts a tree model, so we:
 
 1. transform the raw 18 input columns with the fitted `preprocessor`,
-   producing **34 engineered features**, and
+   producing **34 engineered features**,
 2. build the `TreeExplainer` on the bare `classifier` step, labelling the
-   Shapley values with `preprocessor.get_feature_names_out()`.
+   Shapley values with `preprocessor.get_feature_names_out()`, and
+3. plot the values against the **original** (un-scaled) feature values, so
+   a waterfall reads `Tenure = 1` rather than `Tenure = -0.73`.
 
-400 rows of the held-out **test** split are explained (subsampled for
-speed, `random_state=42`). Logistic regression is intentionally excluded —
-`TreeExplainer` does not support it; the loader picks a tree family
-(xgboost preferred, random_forest fallback).
+The full held-out **test** split (846 customers) is explained. Logistic
+regression is intentionally excluded — `TreeExplainer` does not support it;
+the loader picks a tree family (xgboost preferred, random_forest fallback,
+both paths handled).
 
 ## 3. Generated visualisations (requirement → file)
 
@@ -63,10 +65,11 @@ These align with the Part 1 framing (tenure, satisfaction, complaints and
 recency as retention levers), which is a good sanity check that the model
 learned business-plausible behaviour rather than spurious correlations.
 
-**Single-customer example (index 0):** predicted churn probability ≈ 0.00
-against a model base/expected value of 0.24 (margin space). The waterfall
-and force plots show a long-tenure, no-complaint customer whose features
-push the prediction firmly toward *retained*.
+**Single-customer example (auto-selected highest-risk, customer #80):**
+the model margin is f(x) = 10.4 against a base/expected value of 0.24, i.e.
+a strong churn score. The waterfall attributes this mainly to a very short
+`Tenure = 1`, a logged `Complain = 1`, and a high `NumberOfAddress = 8` —
+exactly the levers Part 1 flagged for retention.
 
 ## 5. Reproduce
 

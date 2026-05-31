@@ -6,14 +6,14 @@ a scikit-learn :class:`~sklearn.pipeline.Pipeline`
 (``preprocessor`` + ``classifier``), ``TreeExplainer`` cannot be applied to
 the pipeline directly. We therefore:
 
-1. transform the raw features with the fitted ``preprocessor`` step, and
-2. build the ``TreeExplainer`` on the bare ``classifier`` step, using the
-   transformed feature names from
-   :meth:`~sklearn.compose.ColumnTransformer.get_feature_names_out`.
+1. transform the raw features with the fitted ``preprocessor`` step,
+2. build the ``TreeExplainer`` on the bare ``classifier`` step, and
+3. plot the Shapley values against the *original* (un-scaled) feature
+   values so the explanations stay readable for a business audience.
 
 Running it::
 
-    python -m churn.explain.shap_explain --model xgboost --sample-size 500
+    python -m churn.explain.shap_explain --model xgboost
 
 All figures are written to ``outputs/xai/`` so they are committed alongside
 the code (they are *not* under the git-ignored ``reports/`` tree).
@@ -72,6 +72,24 @@ def _positive_class(shap_values: shap.Explanation) -> shap.Explanation:
     if shap_values.values.ndim == 3:
         return shap_values[..., 1]
     return shap_values
+
+
+def _with_display(
+    explanation: shap.Explanation, display: pd.DataFrame
+) -> shap.Explanation:
+    """Re-wrap an Explanation so its plotted feature values are readable.
+
+    The Shapley values are computed on the *transformed* matrix, but the
+    feature values shown next to them should be the *original* ones (real
+    tenure, cashback, ... instead of standardised numbers). This keeps the
+    SHAP values intact and only swaps the ``data`` used for display.
+    """
+    return shap.Explanation(
+        values=explanation.values,
+        base_values=explanation.base_values,
+        data=display.to_numpy(),
+        feature_names=list(display.columns),
+    )
 
 
 # Model and data loading
@@ -134,7 +152,10 @@ def load_tree_pipeline(
 
 
 def load_test_features(sample_size: int) -> pd.DataFrame:
-    """Load the test split features, optionally subsampled for speed."""
+    """Load the test-split features, optionally subsampled.
+
+    ``sample_size <= 0`` (the default) explains every row in the test set.
+    """
     if not config.TEST_FILE.exists():
         raise FileNotFoundError(
             f"{config.TEST_FILE} not found. Run "
@@ -173,6 +194,27 @@ def transform_features(
     return classifier, x_transformed
 
 
+def build_display_frame(
+    x_raw: pd.DataFrame, x_transformed: pd.DataFrame
+) -> pd.DataFrame:
+    """Build readable display values aligned to the transformed columns.
+
+    Numeric columns are replaced by their *original* (un-scaled) values so a
+    waterfall reads ``Tenure = 4`` instead of ``Tenure = -0.73``. One-hot
+    columns keep their 0/1 encoding, which is already interpretable
+    (``MaritalStatus_Single = 1``). Missing numeric values are shown as the
+    column median, matching what the model's imputer used.
+    """
+    display = x_transformed.copy()
+    numeric_cols = config.NUMERIC_WITH_NAN + config.NUMERIC_NO_NAN
+    for col in numeric_cols:
+        if col in display.columns and col in x_raw.columns:
+            values = x_raw[col].to_numpy(dtype="float64")
+            median = np.nanmedian(values)
+            display[col] = np.where(np.isnan(values), median, values)
+    return display
+
+
 def build_explainer(
     classifier: object, x_transformed: pd.DataFrame
 ) -> tuple[shap.TreeExplainer, shap.Explanation]:
@@ -191,6 +233,7 @@ def plot_single_point_bar(sv_churn: shap.Explanation, index: int) -> None:
     """Bar chart explaining the churn prediction of one customer."""
     logger.info("Single-point bar (index=%d)", index)
     shap.plots.bar(sv_churn[index], show=False)
+    plt.title(f"SHAP contributions - customer #{index} (churn)")
     _save("01_single_point_bar.png")
 
 
@@ -198,46 +241,50 @@ def plot_global_bar(sv_churn: shap.Explanation) -> None:
     """Global mean-|SHAP| bar chart across all explained customers."""
     logger.info("Global mean-|SHAP| bar")
     shap.plots.bar(sv_churn, show=False)
+    plt.title("Mean |SHAP| over all customers (churn)")
     _save("02_global_bar.png")
 
 
 def plot_summary_per_class(
-    shap_values: shap.Explanation, x_transformed: pd.DataFrame
+    shap_values: shap.Explanation, x_display: pd.DataFrame
 ) -> None:
-    """Summary (beeswarm) plot for each class on the whole sample.
+    """Summary (beeswarm) plot for each class over all customers.
 
-    Satisfies the 'summary plot for each class' requirement for both the
-    3-D RandomForest output and the 2-D XGBoost output.
+    Handles both the 3-D RandomForest output and the 2-D XGBoost output. For
+    XGBoost (a single margin output) the no-churn view is the additive
+    inverse of the churn SHAP values, which is labelled as such.
     """
     vals = shap_values.values
     if vals.ndim == 3:
-        logger.info("Summary plot - class 0 (no churn)")
-        shap.summary_plot(vals[:, :, 0], x_transformed, show=False)
-        _save("03a_summary_class0.png")
-        logger.info("Summary plot - class 1 (churn)")
-        shap.summary_plot(vals[:, :, 1], x_transformed, show=False)
-        _save("03b_summary_class1.png")
+        class0, class1 = vals[:, :, 0], vals[:, :, 1]
+        c0_title = "SHAP summary - no-churn class (0)"
     else:
-        # XGBoost log-odds: churn class is +vals, no-churn is the negation.
-        logger.info("Summary plot - class 0 (no churn, negated)")
-        shap.summary_plot(-vals, x_transformed, show=False)
-        _save("03a_summary_class0.png")
-        logger.info("Summary plot - class 1 (churn)")
-        shap.summary_plot(vals, x_transformed, show=False)
-        _save("03b_summary_class1.png")
+        class0, class1 = -vals, vals
+        c0_title = "SHAP summary - no-churn class (negated margin)"
+
+    logger.info("Summary plot - no-churn class")
+    shap.summary_plot(class0, x_display, show=False)
+    plt.title(c0_title)
+    _save("03a_summary_class0.png")
+
+    logger.info("Summary plot - churn class")
+    shap.summary_plot(class1, x_display, show=False)
+    plt.title("SHAP summary - churn class (1)")
+    _save("03b_summary_class1.png")
 
 
 def plot_waterfall(sv_churn: shap.Explanation, index: int) -> None:
     """Waterfall plot for a single customer."""
     logger.info("Waterfall (index=%d)", index)
     shap.plots.waterfall(sv_churn[index], show=False)
+    plt.title(f"Why customer #{index} is scored for churn")
     _save("04_waterfall.png")
 
 
 def plot_force(
     explainer: shap.TreeExplainer,
     sv_churn: shap.Explanation,
-    x_transformed: pd.DataFrame,
+    x_display: pd.DataFrame,
     index: int,
 ) -> None:
     """Interactive force plot for a single customer, saved as HTML."""
@@ -248,7 +295,7 @@ def plot_force(
     force = shap.force_plot(
         ev,
         sv_churn.values[index],
-        x_transformed.iloc[index],
+        x_display.iloc[index],
         matplotlib=False,
     )
     XAI_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -280,23 +327,24 @@ def plot_beeswarm(sv_churn: shap.Explanation) -> None:
     """Beeswarm plot of SHAP value distributions across all customers."""
     logger.info("Beeswarm")
     shap.plots.beeswarm(sv_churn, show=False)
+    plt.title("SHAP value distribution per feature (churn)")
     _save("07_beeswarm.png")
 
 
 def plot_dependence(
-    sv_churn: shap.Explanation, x_transformed: pd.DataFrame
+    sv_churn: shap.Explanation, x_display: pd.DataFrame
 ) -> None:
     """Dependence plots for the two most important features."""
     logger.info("Dependence plots (top-2 features)")
     mean_shap = np.abs(sv_churn.values).mean(axis=0)
     top = np.argsort(mean_shap)[::-1]
-    first = x_transformed.columns[top[0]]
-    second = x_transformed.columns[top[1]]
+    first = x_display.columns[top[0]]
+    second = x_display.columns[top[1]]
 
     shap.dependence_plot(
         first,
         sv_churn.values,
-        x_transformed,
+        x_display,
         interaction_index=second,
         show=False,
     )
@@ -305,7 +353,7 @@ def plot_dependence(
     shap.dependence_plot(
         second,
         sv_churn.values,
-        x_transformed,
+        x_display,
         interaction_index=first,
         show=False,
     )
@@ -315,25 +363,48 @@ def plot_dependence(
 # CLI
 
 
+def pick_index(pipeline: Pipeline, x_raw: pd.DataFrame, index: int) -> int:
+    """Choose the row for single-point plots.
+
+    ``index < 0`` (the default) auto-selects the highest-risk customer in
+    the sample, which makes the waterfall / force plots illustrative instead
+    of explaining an obvious non-churner.
+    """
+    if index >= 0:
+        return index
+    proba = pipeline.predict_proba(x_raw)[:, 1]
+    chosen = int(np.argmax(proba))
+    logger.info(
+        "Auto-selected customer #%d (churn probability %.3f)",
+        chosen,
+        proba[chosen],
+    )
+    return chosen
+
+
 def run(model: str, sample_size: int, index: int) -> None:
     """Generate the full SHAP plot suite for the churn model."""
     pipeline, family, version = load_tree_pipeline(preferred=model)
     logger.info("Explaining %s (registry version %s)", family, version)
 
     x_raw = load_test_features(sample_size)
+    index = pick_index(pipeline, x_raw, index)
+
     classifier, x_transformed = transform_features(pipeline, x_raw)
     explainer, shap_values = build_explainer(classifier, x_transformed)
+    x_display = build_display_frame(x_raw, x_transformed)
 
     sv_churn = _positive_class(shap_values)
+    sv_disp = _with_display(sv_churn, x_display)
 
-    plot_single_point_bar(sv_churn, index)
-    plot_global_bar(sv_churn)
-    plot_summary_per_class(shap_values, x_transformed)
-    plot_waterfall(sv_churn, index)
-    plot_force(explainer, sv_churn, x_transformed, index)
-    plot_mean_shap(sv_churn, list(x_transformed.columns))
-    plot_beeswarm(sv_churn)
-    plot_dependence(sv_churn, x_transformed)
+    plot_single_point_bar(sv_disp, index)
+    plot_global_bar(sv_disp)
+    plot_summary_per_class(shap_values, x_display)
+    plot_waterfall(sv_disp, index)
+    plot_force(explainer, sv_churn, x_display, index)
+    plot_mean_shap(sv_churn, list(x_display.columns))
+    plot_beeswarm(sv_disp)
+    plot_dependence(sv_churn, x_display)
 
     logger.info("All XAI outputs written to %s", XAI_OUTPUT_DIR)
 
@@ -350,14 +421,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--sample-size",
         type=int,
-        default=500,
-        help="Max rows from the test set to explain (0 = all).",
+        default=0,
+        help="Rows from the test set to explain (0 = all, the default).",
     )
     parser.add_argument(
         "--index",
         type=int,
-        default=0,
-        help="Row index for single-point explanations.",
+        default=-1,
+        help="Row for single-point plots (-1 = auto-pick highest risk).",
     )
     args = parser.parse_args(argv)
 
