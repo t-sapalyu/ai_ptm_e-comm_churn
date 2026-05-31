@@ -1,39 +1,33 @@
-# Part 3 — Explainable AI (SHAP)
+# Part 3 - Explainable AI (SHAP)
 
-This section documents the XAI work added on top of the Part 2 churn
-pipeline. It explains **why** the production model predicts churn, using
-SHAP (SHapley Additive exPlanations).
+This section covers the XAI work on top of the Part 2 churn pipeline. It
+uses SHAP to show why the model predicts churn.
 
 ## 1. Setup
 
 - Library: `shap==0.46.0` (added to `requirements.txt`).
-- Model explained: the registered **XGBoost** pipeline
-  (`models:/churn_classifier/3`, the version promoted to *Production* in
-  Part 2, test F1 = 0.940).
+- Model explained: the registered XGBoost pipeline
+  (`models:/churn_classifier/3`, promoted to Production in Part 2;
+  test F1 = 0.854, ROC-AUC = 0.967 on de-duplicated data).
 - Code: `src/churn/explain/shap_explain.py`
   (run with `python -m churn.explain.shap_explain` or `make explain`).
-- Outputs: `outputs/xai/` (committed; deliberately **not** under the
-  git-ignored `reports/` HTML path).
+- Outputs: `outputs/xai/`.
 
-## 2. Method — explaining a Pipeline, not a bare model
+## 2. Method
 
-The Part 2 model is a scikit-learn `Pipeline` of a `ColumnTransformer`
-preprocessor (median imputation + scaling + one-hot encoding) followed by
-the classifier. `shap.TreeExplainer` only accepts a tree model, so we:
+The Part 2 model is a scikit-learn Pipeline (ColumnTransformer preprocessor
+plus classifier). `shap.TreeExplainer` only accepts a tree model, so we:
 
-1. transform the raw 18 input columns with the fitted `preprocessor`,
-   producing **34 engineered features**,
-2. build the `TreeExplainer` on the bare `classifier` step, labelling the
-   Shapley values with `preprocessor.get_feature_names_out()`, and
-3. plot the values against the **original** (un-scaled) feature values, so
-   a waterfall reads `Tenure = 1` rather than `Tenure = -0.73`.
+1. transform the 18 input columns with the fitted preprocessor (34 features),
+2. build the TreeExplainer on the classifier step, and
+3. plot the values against the original (un-scaled) feature values, so a
+   waterfall reads `Tenure = 1` instead of `Tenure = -0.73`.
 
-The full held-out **test** split (846 customers) is explained. Logistic
-regression is intentionally excluded — `TreeExplainer` does not support it;
-the loader picks a tree family (xgboost preferred, random_forest fallback,
-both paths handled).
+We explain the full test split (762 customers). Logistic regression is
+skipped because TreeExplainer does not support it; the loader picks a tree
+model (xgboost first, random_forest as fallback).
 
-## 3. Generated visualisations (requirement → file)
+## 3. Generated plots (requirement -> file)
 
 | PDF requirement | File |
 | --- | --- |
@@ -46,30 +40,25 @@ both paths handled).
 
 ## 4. Key findings
 
-Top churn drivers by mean |SHAP| on the test sample:
+Top churn drivers by mean |SHAP| on the test set:
 
 | Rank | Feature | Mean \|SHAP\| | Reading |
 | --- | --- | --- | --- |
-| 1 | `Tenure` | 2.63 | Short tenure is by far the strongest churn signal |
-| 2 | `Complain` | 1.24 | Having complained sharply raises churn risk |
-| 3 | `CashbackAmount` | 0.94 | Lower cashback associates with churn |
-| 4 | `NumberOfAddress` | 0.93 | |
-| 5 | `WarehouseToHome` | 0.70 | Longer delivery distance pushes churn up |
-| 6 | `DaySinceLastOrder` | 0.63 | Recency: longer gaps raise risk |
-| 7 | `MaritalStatus_Single` | 0.53 | Single customers churn more |
-| 8 | `SatisfactionScore` | 0.51 | |
-| 9 | `CityTier` | 0.50 | |
-| 10 | `PreferedOrderCat_Laptop & Accessory` | 0.41 | |
+| 1 | `Tenure` | 2.75 | Short tenure is the strongest churn signal |
+| 2 | `Complain` | 1.27 | Complaints raise churn risk |
+| 3 | `NumberOfAddress` | 0.95 | |
+| 4 | `CashbackAmount` | 0.92 | Lower cashback links to churn |
+| 5 | `MaritalStatus_Single` | 0.61 | Single customers churn more |
+| 6 | `DaySinceLastOrder` | 0.58 | Longer gaps raise risk |
+| 7 | `WarehouseToHome` | 0.56 | Longer delivery distance raises churn |
+| 8 | `SatisfactionScore` | 0.54 | |
 
-These align with the Part 1 framing (tenure, satisfaction, complaints and
-recency as retention levers), which is a good sanity check that the model
-learned business-plausible behaviour rather than spurious correlations.
+These match the drivers from Part 1 (tenure, satisfaction, complaints,
+recency), so the model is using sensible signals.
 
-**Single-customer example (auto-selected highest-risk, customer #80):**
-the model margin is f(x) = 10.4 against a base/expected value of 0.24, i.e.
-a strong churn score. The waterfall attributes this mainly to a very short
-`Tenure = 1`, a logged `Complain = 1`, and a high `NumberOfAddress = 8` —
-exactly the levers Part 1 flagged for retention.
+Single-customer example (highest-risk row, customer #13): predicted churn
+probability 1.000, model margin f(x) = 9.9 vs base value 0.23. The waterfall
+puts most of this on short tenure, a logged complaint, and recency.
 
 ## 5. Reproduce
 
@@ -77,5 +66,5 @@ exactly the levers Part 1 flagged for retention.
 python -m churn.data.make_dataset     # build splits
 python -m churn.models.train          # train + register models
 python -m churn.models.evaluate       # promote best to Production
-python -m churn.explain.shap_explain  # -> outputs/xai/
+python -m churn.explain.shap_explain  # outputs to outputs/xai/
 ```

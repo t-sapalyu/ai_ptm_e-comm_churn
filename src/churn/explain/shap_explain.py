@@ -110,7 +110,7 @@ def load_tree_pipeline(
     Returns
     -------
     tuple
-        ``(pipeline, family, version)`` — the fitted sklearn pipeline, the
+        ``(pipeline, family, version)`` - the fitted sklearn pipeline, the
         model-family tag, and the registry version string.
     """
     client = MlflowClient()
