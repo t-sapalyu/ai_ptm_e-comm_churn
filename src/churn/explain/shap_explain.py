@@ -334,12 +334,17 @@ def plot_beeswarm(sv_churn: shap.Explanation) -> None:
 def plot_dependence(
     sv_churn: shap.Explanation, x_display: pd.DataFrame
 ) -> None:
-    """Dependence plots for the two most important features."""
-    logger.info("Dependence plots (top-2 features)")
-    mean_shap = np.abs(sv_churn.values).mean(axis=0)
-    top = np.argsort(mean_shap)[::-1]
-    first = x_display.columns[top[0]]
-    second = x_display.columns[top[1]]
+    """Dependence plots for the two most important continuous features.
+
+    One-hot and low-cardinality flag columns (e.g. ``Complain``) are
+    skipped because a dependence plot on a 0/1 feature is just two strips.
+    """
+    logger.info("Dependence plots (top-2 continuous features)")
+    order = np.argsort(np.abs(sv_churn.values).mean(axis=0))[::-1]
+    continuous = [i for i in order if x_display.iloc[:, i].nunique() > 10]
+    picks = continuous[:2] if len(continuous) >= 2 else list(order[:2])
+    first = x_display.columns[picks[0]]
+    second = x_display.columns[picks[1]]
 
     shap.dependence_plot(
         first,
