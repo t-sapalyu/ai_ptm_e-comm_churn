@@ -6,6 +6,7 @@
 #    .\tasks.ps1 prepare
 #    .\tasks.ps1 train
 #    .\tasks.ps1 evaluate
+#    .\tasks.ps1 explain
 #    .\tasks.ps1 serve
 #
 # If PowerShell blocks the script with an execution-policy error, run this
@@ -43,6 +44,7 @@ function Show-Help {
     Write-Host "    prepare         Build train/val/test splits + reference snapshot"
     Write-Host "    train           Train all three models, log to MLflow"
     Write-Host "    evaluate        Evaluate Staging on test set, promote to Production"
+    Write-Host "    explain         Run SHAP TreeExplainer and generate XAI plots"
     Write-Host "    serve           Serve Production model locally on port 5001"
     Write-Host "    mlflow-ui       Open MLflow UI on port 5000"
     Write-Host ""
@@ -72,6 +74,7 @@ switch ($Task.ToLower()) {
     "prepare"         { python -m churn.data.make_dataset }
     "train"           { python -m churn.models.train }
     "evaluate"        { python -m churn.models.evaluate }
+    "explain"         { python -m churn.models.explain }
     "serve"           { mlflow models serve -m "models:/churn_classifier/Production" -p 5001 --no-conda }
     "mlflow-ui"       { mlflow ui --port 5000 }
 
