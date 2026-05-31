@@ -47,9 +47,7 @@ def prepare_shap_data() -> tuple[object, pd.DataFrame]:
     x_test_transformed = preprocessor.transform(x_test)
     feature_names = preprocessor.get_feature_names_out()
 
-    x_test_df = pd.DataFrame(
-        x_test_transformed, columns=feature_names
-    )
+    x_test_df = pd.DataFrame(x_test_transformed, columns=feature_names)
     return classifier, x_test_df
 
 
@@ -78,37 +76,27 @@ def generate_global_plots(
     # 1. Summary plot
     plt.figure()
     shap.summary_plot(shap_values, x_test_df, show=False)
-    plt.savefig(
-        out_dir / "summary_plot.png", bbox_inches="tight"
-    )
+    plt.savefig(out_dir / "summary_plot.png", bbox_inches="tight")
     plt.close()
 
     # 2. Beeswarm plot
     plt.figure()
     shap.plots.beeswarm(shap_values, show=False)
-    plt.savefig(
-        out_dir / "beeswarm_plot.png", bbox_inches="tight"
-    )
+    plt.savefig(out_dir / "beeswarm_plot.png", bbox_inches="tight")
     plt.close()
 
     # 3. Mean SHAP plot
     plt.figure()
     shap.plots.bar(shap_values, show=False)
-    plt.savefig(
-        out_dir / "mean_shap_plot.png", bbox_inches="tight"
-    )
+    plt.savefig(out_dir / "mean_shap_plot.png", bbox_inches="tight")
     plt.close()
 
     # 4. Dependence plot (uses the first feature dynamically)
     plt.figure()
     first_feature = x_test_df.columns[0]
     raw_shap_values = explainer.shap_values(x_test_df)
-    shap.dependence_plot(
-        first_feature, raw_shap_values, x_test_df, show=False
-    )
-    plt.savefig(
-        out_dir / "dependence_plot.png", bbox_inches="tight"
-    )
+    shap.dependence_plot(first_feature, raw_shap_values, x_test_df, show=False)
+    plt.savefig(out_dir / "dependence_plot.png", bbox_inches="tight")
     plt.close()
     logger.info("Global SHAP plots generated.")
 
