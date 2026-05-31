@@ -6,9 +6,9 @@ last_updated_timestamp: 1780249943309
 name: churn_classifier
 run_id: 7d6945069a4e40179b671df9d02ed0e5
 run_link: null
-source: file:///C:/Users/George/Epita/AI_PM_Students_Materials_042026/churn_prediction_gp%20-%20Copy/ai_ptm_e-comm_churn/mlruns/209976799173498965/7d6945069a4e40179b671df9d02ed0e5/artifacts/model
+source: mlruns/209976799173498965/7d6945069a4e40179b671df9d02ed0e5/artifacts/model
 status: READY
 status_message: null
-storage_location: file:///C:/Users/George/Epita/AI_PM_Students_Materials_042026/churn_prediction_gp%20-%20Copy/ai_ptm_e-comm_churn/mlruns/209976799173498965/7d6945069a4e40179b671df9d02ed0e5/artifacts/model
+storage_location: mlruns/209976799173498965/7d6945069a4e40179b671df9d02ed0e5/artifacts/model
 user_id: null
 version: 2

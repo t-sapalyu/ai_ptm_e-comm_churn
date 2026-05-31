@@ -1,4 +1,4 @@
-artifact_uri: file:///C:/Users/George/Epita/AI_PM_Students_Materials_042026/churn_prediction_gp%20-%20Copy/ai_ptm_e-comm_churn/mlruns/209976799173498965/9a052fdf3e3d458b82f0ea5aff1e7b51/artifacts
+artifact_uri: mlruns/209976799173498965/9a052fdf3e3d458b82f0ea5aff1e7b51/artifacts
 end_time: 1780249961582
 entry_point_name: ''
 experiment_id: '209976799173498965'
