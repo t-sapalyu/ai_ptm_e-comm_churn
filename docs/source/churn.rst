@@ -8,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    churn.data
+   churn.explain
    churn.features
    churn.inference
    churn.models

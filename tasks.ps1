@@ -46,6 +46,9 @@ function Show-Help {
     Write-Host "    serve           Serve Production model locally on port 5001"
     Write-Host "    mlflow-ui       Open MLflow UI on port 5000"
     Write-Host ""
+    Write-Host "  Explainability (Part 3)"
+    Write-Host "    explain         Generate SHAP XAI plots into outputs/xai/"
+    Write-Host ""
     Write-Host "  Monitoring & operations"
     Write-Host "    drift <path>    Run drift report on the parquet at <path>"
     Write-Host "    rollback-list   List every registered model version"
@@ -84,6 +87,8 @@ switch ($Task.ToLower()) {
     }
 
     "rollback-list"   { python -m churn.models.rollback --list }
+
+    "explain"         { python -m churn.explain.shap_explain --model xgboost --sample-size 400 }
 
     "docs"            { sphinx-build -b html docs/source docs/build/html }
     "docker-build"    { docker build -t retailgenius-churn:latest . }

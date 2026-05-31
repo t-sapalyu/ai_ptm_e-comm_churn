@@ -36,3 +36,22 @@ python -m churn.models.rollback --version 3
 
 # After serving, in a second terminal, make inference request to test serving
 python -m churn.inference.request
+
+# Part 3 - Explainable AI (SHAP)
+# Explain the registered tree model with SHAP. TreeExplainer is run on the
+# classifier step of the pipeline over the preprocessed features. Defaults to
+# the xgboost version; falls back to random_forest. logreg is not explainable
+# with TreeExplainer.
+python -m churn.explain.shap_explain --model xgboost --sample-size 400
+
+# All figures are written to outputs/xai/ (committed, NOT under reports/):
+#   01_single_point_bar.png   single customer, bar
+#   02_global_bar.png         all customers, mean|SHAP| bar
+#   03a_summary_class0.png    summary plot - no-churn class
+#   03b_summary_class1.png    summary plot - churn class
+#   04_waterfall.png          single customer, waterfall
+#   05_force_plot.html        single customer, interactive force plot
+#   06_mean_shap.png          mean|SHAP| feature importance
+#   07_beeswarm.png           beeswarm over all customers
+#   08_dependence_top1.png    dependence plot, top feature
+#   09_dependence_top2.png    dependence plot, 2nd feature

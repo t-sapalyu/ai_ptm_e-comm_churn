@@ -1,5 +1,5 @@
 .PHONY: help install install-dev format lint test clean prepare train evaluate \
-        serve mlflow-ui docs docker-build docker-run drift rollback-list
+        serve mlflow-ui docs docker-build docker-run drift rollback-list explain
 
 PYTHON := python
 PIP := pip
@@ -22,6 +22,9 @@ help:
 	@echo "    evaluate        Evaluate Staging on test set, promote to Production"
 	@echo "    serve           Serve Production model locally on port 5001"
 	@echo "    mlflow-ui       Open MLflow UI on port 5000"
+	@echo ""
+	@echo "  Explainability (Part 3)"
+	@echo "    explain         Generate SHAP XAI plots into outputs/xai/"
 	@echo ""
 	@echo "  Monitoring & operations"
 	@echo "    drift           Run drift report (CURRENT=path/to/sample.parquet)"
@@ -77,6 +80,9 @@ drift:
 
 rollback-list:
 	$(PYTHON) -m churn.models.rollback --list
+
+explain:
+	$(PYTHON) -m churn.explain.shap_explain --model xgboost --sample-size 400
 
 docs:
 	sphinx-build -b html docs/source docs/build/html
