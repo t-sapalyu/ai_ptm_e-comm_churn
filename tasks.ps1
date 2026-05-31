@@ -88,7 +88,7 @@ switch ($Task.ToLower()) {
 
     "rollback-list"   { python -m churn.models.rollback --list }
 
-    "explain"         { python -m churn.explain.shap_explain --model xgboost --sample-size 400 }
+    "explain"         { python -m churn.explain.shap_explain }
 
     "docs"            { sphinx-build -b html docs/source docs/build/html }
     "docker-build"    { docker build -t retailgenius-churn:latest . }

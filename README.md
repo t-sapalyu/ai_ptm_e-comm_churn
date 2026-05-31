@@ -41,8 +41,9 @@ python -m churn.inference.request
 # Explain the registered tree model with SHAP. TreeExplainer is run on the
 # classifier step of the pipeline over the preprocessed features. Defaults to
 # the xgboost version; falls back to random_forest. logreg is not explainable
-# with TreeExplainer.
-python -m churn.explain.shap_explain --model xgboost --sample-size 400
+# with TreeExplainer. Defaults: all test points, auto-pick highest-risk
+# customer for the single-point plots.
+python -m churn.explain.shap_explain
 
 # All figures are written to outputs/xai/ (committed, NOT under reports/):
 #   01_single_point_bar.png   single customer, bar

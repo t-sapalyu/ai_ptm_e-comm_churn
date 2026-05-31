@@ -82,7 +82,7 @@ rollback-list:
 	$(PYTHON) -m churn.models.rollback --list
 
 explain:
-	$(PYTHON) -m churn.explain.shap_explain --model xgboost --sample-size 400
+	$(PYTHON) -m churn.explain.shap_explain
 
 docs:
 	sphinx-build -b html docs/source docs/build/html
