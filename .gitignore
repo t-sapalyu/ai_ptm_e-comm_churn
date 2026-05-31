@@ -244,3 +244,4 @@ htmlcov/
 
 # Sphinx
 docs/_build/
+docs/build/
