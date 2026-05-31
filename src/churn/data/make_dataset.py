@@ -37,6 +37,9 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
     missing = [c for c in required if c not in df.columns]
     if missing:
         raise ValueError(f"Raw dataset is missing required columns: {missing}")
+
+    # drop duplicate rows to avoid train/test leakage
+    df = df.drop_duplicates(subset=config.ALL_FEATURES).reset_index(drop=True)
     return df
 
 
@@ -83,7 +86,8 @@ def save_splits(
         json.dump(fingerprints, fh, indent=2)
 
     logger.info(
-        "Wrote splits: train=%d rows, val=%d rows, test=%d rows. Fingerprints in %s",
+        "Wrote splits: train=%d rows, val=%d rows, test=%d rows. "
+        "Fingerprints in %s",
         len(train_df),
         len(val_df),
         len(test_df),
