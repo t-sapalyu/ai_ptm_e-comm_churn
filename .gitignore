@@ -226,8 +226,6 @@ data/processed/*
 aim_env/
 
 # MLflow and reports
-mlruns/
-mlartifacts/
 reports/*.html
 
 # Notebooks

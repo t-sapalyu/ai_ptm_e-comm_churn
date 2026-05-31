@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/George/Epita/AI_PM_Students_Materials_042026/churn_prediction_gp%20-%20Copy/ai_ptm_e-comm_churn/mlruns/209976799173498965/7d6945069a4e40179b671df9d02ed0e5/artifacts
+end_time: 1780249943539
+entry_point_name: ''
+experiment_id: '209976799173498965'
+lifecycle_stage: active
+run_id: 7d6945069a4e40179b671df9d02ed0e5
+run_name: random_forest
+run_uuid: 7d6945069a4e40179b671df9d02ed0e5
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1780249925125
+status: 3
+tags: []
+user_id: George

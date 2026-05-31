@@ -1,0 +1,42 @@
+artifact_path: model
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.11.5
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.5.1
+mlflow_version: 2.16.2
+model_size_bytes: 13323578
+model_uuid: 93187918f0e14de985cbd48c6985dc02
+run_id: 7d6945069a4e40179b671df9d02ed0e5
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  serving_input_path: serving_input_example.json
+  type: dataframe
+signature:
+  inputs: '[{"type": "double", "name": "Tenure", "required": false}, {"type": "double",
+    "name": "WarehouseToHome", "required": false}, {"type": "double", "name": "HourSpendOnApp",
+    "required": false}, {"type": "double", "name": "OrderAmountHikeFromlastYear",
+    "required": false}, {"type": "double", "name": "CouponUsed", "required": false},
+    {"type": "double", "name": "OrderCount", "required": false}, {"type": "double",
+    "name": "DaySinceLastOrder", "required": false}, {"type": "long", "name": "CityTier",
+    "required": true}, {"type": "long", "name": "NumberOfDeviceRegistered", "required":
+    true}, {"type": "long", "name": "SatisfactionScore", "required": true}, {"type":
+    "long", "name": "NumberOfAddress", "required": true}, {"type": "long", "name":
+    "Complain", "required": true}, {"type": "double", "name": "CashbackAmount", "required":
+    true}, {"type": "string", "name": "PreferredLoginDevice", "required": true}, {"type":
+    "string", "name": "PreferredPaymentMode", "required": true}, {"type": "string",
+    "name": "Gender", "required": true}, {"type": "string", "name": "PreferedOrderCat",
+    "required": true}, {"type": "string", "name": "MaritalStatus", "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "int64", "shape": [-1]}}]'
+  params: null
+utc_time_created: '2026-05-31 17:52:19.038997'
